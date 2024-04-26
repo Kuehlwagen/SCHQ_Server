@@ -40,6 +40,8 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
         _logger.LogWarning("[{Guid} AddChannel Exception] Message: {Message}, Inner Exception: {InnerExceptionMessage}",
           guid, ex.Message, ex.InnerException?.Message ?? "Empty");
       }
+    } else {
+      rtnVal.Info = "No channel name was given";
     }
 
     _logger.LogInformation("[{Guid} AddChannel Reply] Success: {Success}, Info: {Info}", guid, rtnVal.Success, rtnVal.Info);
@@ -129,6 +131,8 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
         _logger.LogWarning("[{Guid} RemoveChannel Exception] Message: {Message}, Inner Exception: {InnerExceptionMessage}",
           guid, ex.Message, ex.InnerException?.Message ?? "Empty");
       }
+    } else {
+      rtnVal.Info = "No channel name was given";
     }
 
     _logger.LogInformation("[{Guid} RemoveChannel Reply] Success: {Success}, Info: {Info}", guid, rtnVal.Success, rtnVal.Info);
@@ -143,41 +147,47 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
       guid, request.Channel, request.Password?.Length > 0 ? "Yes" : "No", request?.Relations?.Count);
     SuccessReply rtnVal = new();
 
-    if (!string.IsNullOrWhiteSpace(request?.Channel) && request?.Relations?.Count > 0) {
-      request.Channel = request.Channel.Trim();
-      request.Password = !string.IsNullOrWhiteSpace(request.Password) ? Encryption.EncryptText(request.Password) : string.Empty;
-      try {
-        Channel? channel = _db.Channels.FirstOrDefault(c => c.Name == request.Channel);
-        if (channel != null) {
-          if (channel.Permissions >= ChannelPermissions.Write || channel.Password == request.Password) {
-            List<Relation?> relations = [];
-            foreach (RelationInfo relationInfo in request.Relations) {
-              Relation? relation = _db.Relations.FirstOrDefault(r => r.Type == relationInfo.Type && r.ChannelId == channel.Id && r.Name == relationInfo.Name);
-              relation ??= new() {
-                ChannelId = channel.Id,
-                Type = relationInfo.Type,
-                Name = relationInfo.Name,
-              };
-              relation.Timestamp = DateTime.UtcNow;
-              relation.Value = relationInfo.Relation;
-              relations.Add(relation);
-            }
-            _db.UpdateRange(relations!);
-            rtnVal.Success = _db.SaveChanges() > 0;
-            if (!rtnVal.Success) {
-              rtnVal.Info = "No entries written";
+    if (!string.IsNullOrWhiteSpace(request?.Channel)) {
+      if (request?.Relations?.Count > 0) {
+        request.Channel = request.Channel.Trim();
+        request.Password = !string.IsNullOrWhiteSpace(request.Password) ? Encryption.EncryptText(request.Password) : string.Empty;
+        try {
+          Channel? channel = _db.Channels.FirstOrDefault(c => c.Name == request.Channel);
+          if (channel != null) {
+            if (channel.Permissions >= ChannelPermissions.Write || channel.Password == request.Password) {
+              List<Relation?> relations = [];
+              foreach (RelationInfo relationInfo in request.Relations) {
+                Relation? relation = _db.Relations.FirstOrDefault(r => r.Type == relationInfo.Type && r.ChannelId == channel.Id && r.Name == relationInfo.Name);
+                relation ??= new() {
+                  ChannelId = channel.Id,
+                  Type = relationInfo.Type,
+                  Name = relationInfo.Name,
+                };
+                relation.Timestamp = DateTime.UtcNow;
+                relation.Value = relationInfo.Relation;
+                relations.Add(relation);
+              }
+              _db.UpdateRange(relations!);
+              rtnVal.Success = _db.SaveChanges() > 0;
+              if (!rtnVal.Success) {
+                rtnVal.Info = "No entries written";
+              }
+            } else {
+              rtnVal.Info = "Access denied";
             }
           } else {
-            rtnVal.Info = "Access denied";
+            rtnVal.Info = "Channel not found";
           }
-        } else {
-          rtnVal.Info = "Channel not found";
+        } catch (Exception ex) {
+          rtnVal.Info = $"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message ?? "Empty"}";
+          _logger.LogWarning("[{Guid} SetRelations Exception] Message: {Message}, Inner Exception: {InnerExceptionMessage}",
+            guid, ex.Message, ex.InnerException?.Message ?? "Empty");
         }
-      } catch (Exception ex) {
-        rtnVal.Info = $"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message ?? "Empty"}";
-        _logger.LogWarning("[{Guid} SetRelations Exception] Message: {Message}, Inner Exception: {InnerExceptionMessage}",
-          guid, ex.Message, ex.InnerException?.Message ?? "Empty");
+      } else {
+        rtnVal.Info = "No relations were given";
       }
+    } else {
+      rtnVal.Info = "No channel name was given";
     }
 
     _logger.LogInformation("[{Guid} SetRelations Reply] Success: {Success}, Info: {Info}", guid, rtnVal.Success, rtnVal.Info);
@@ -190,38 +200,44 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
       guid, request.Channel, request.Password?.Length > 0 ? "Yes" : "No", request.Relation.Type, request.Relation.Name, request.Relation.Relation);
     SuccessReply rtnVal = new();
 
-    if (!string.IsNullOrWhiteSpace(request.Channel) && !string.IsNullOrWhiteSpace(request.Relation?.Name)) {
-      request.Channel = request.Channel.Trim();
-      request.Relation.Name = request.Relation.Name.Trim();
-      request.Password = !string.IsNullOrWhiteSpace(request.Password) ? Encryption.EncryptText(request.Password) : string.Empty;
-      try {
-        Channel? channel = _db.Channels.FirstOrDefault(c => c.Name == request.Channel);
-        if (channel != null) {
-          if (channel.Permissions >= ChannelPermissions.Write || channel.Password == request.Password) {
-            Relation? relation = _db.Relations.FirstOrDefault(r => r.Type == request.Relation.Type && r.ChannelId == channel.Id && r.Name == request.Relation.Name);
-            relation ??= new() {
-              ChannelId = channel.Id,
-              Type = request.Relation.Type,
-              Name = request.Relation.Name,
-            };
-            relation.Timestamp = DateTime.UtcNow;
-            relation.Value = request.Relation.Relation;
-            _db.Update(relation);
-            rtnVal.Success = _db.SaveChanges() > 0;
-            if (!rtnVal.Success) {
-              rtnVal.Info = "No entries written";
+    if (!string.IsNullOrWhiteSpace(request.Channel)) {
+      if (!string.IsNullOrWhiteSpace(request.Relation?.Name)) {
+        request.Channel = request.Channel.Trim();
+        request.Relation.Name = request.Relation.Name.Trim();
+        request.Password = !string.IsNullOrWhiteSpace(request.Password) ? Encryption.EncryptText(request.Password) : string.Empty;
+        try {
+          Channel? channel = _db.Channels.FirstOrDefault(c => c.Name == request.Channel);
+          if (channel != null) {
+            if (channel.Permissions >= ChannelPermissions.Write || channel.Password == request.Password) {
+              Relation? relation = _db.Relations.FirstOrDefault(r => r.Type == request.Relation.Type && r.ChannelId == channel.Id && r.Name == request.Relation.Name);
+              relation ??= new() {
+                ChannelId = channel.Id,
+                Type = request.Relation.Type,
+                Name = request.Relation.Name,
+              };
+              relation.Timestamp = DateTime.UtcNow;
+              relation.Value = request.Relation.Relation;
+              _db.Update(relation);
+              rtnVal.Success = _db.SaveChanges() > 0;
+              if (!rtnVal.Success) {
+                rtnVal.Info = "No entries written";
+              }
+            } else {
+              rtnVal.Info = "Access denied";
             }
           } else {
-            rtnVal.Info = "Access denied";
+            rtnVal.Info = "Channel not found";
           }
-        } else {
-          rtnVal.Info = "Channel not found";
+        } catch (Exception ex) {
+          rtnVal.Info = $"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message ?? "Empty"}";
+          _logger.LogWarning("[{Guid} SetRelation Exception] Message: {Message}, Inner Exception: {InnerExceptionMessage}",
+            guid, ex.Message, ex.InnerException?.Message ?? "Empty");
         }
-      } catch (Exception ex) {
-        rtnVal.Info = $"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message ?? "Empty"}";
-        _logger.LogWarning("[{Guid} SetRelation Exception] Message: {Message}, Inner Exception: {InnerExceptionMessage}",
-          guid, ex.Message, ex.InnerException?.Message ?? "Empty");
+      } else {
+        rtnVal.Info = "No relation name was given";
       }
+    } else {
+      rtnVal.Info = "No channel name was given";
     }
 
     _logger.LogInformation("[{Guid} SetRelation Reply] Success: {Success}, Info: {Info}", guid, rtnVal.Success, rtnVal.Info);
