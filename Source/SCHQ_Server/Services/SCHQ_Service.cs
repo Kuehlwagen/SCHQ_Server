@@ -164,7 +164,9 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
                   Name = relationInfo.Name,
                 };
                 relation.Timestamp = DateTime.UtcNow;
-                relation.Value = relationInfo.Relation;
+                if (relationInfo.Relation > RelationValue.NotAssigned) {
+                  relation.Value = relationInfo.Relation;
+                }
                 relations.Add(relation);
               }
               _db.UpdateRange(relations!);
