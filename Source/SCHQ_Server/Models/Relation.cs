@@ -36,6 +36,7 @@ public class Relation {
   public RelationType Type { get; set; }
   public string? Name { get; set; }
   public RelationValue Value { get; set; }
+  public string? Comment { get; set; }
 }
 
 [Table("Channels"), Index("Name", new string[] {}, IsUnique = true, Name = "ChannelName")]

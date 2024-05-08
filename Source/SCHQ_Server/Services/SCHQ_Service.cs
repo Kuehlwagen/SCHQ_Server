@@ -161,11 +161,14 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
                 relation ??= new() {
                   ChannelId = channel.Id,
                   Type = relationInfo.Type,
-                  Name = relationInfo.Name,
+                  Name = relationInfo.Name
                 };
                 relation.Timestamp = DateTime.UtcNow;
                 if (relationInfo.Relation > RelationValue.NotAssigned) {
                   relation.Value = relationInfo.Relation;
+                }
+                if (relationInfo.Comment != null) {
+                  relation.Comment = relationInfo.Comment;
                 }
                 relations.Add(relation);
               }
@@ -198,8 +201,8 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
 
   public override Task<SuccessReply> SetRelation(SetRelationRequest request, ServerCallContext context) {
     Guid guid = Guid.NewGuid();
-    _logger.LogInformation("[{Guid} SetRelation Request] Channel: {Channel}, Password: {Password}, Type: {Type}, Name: {Name}, Relation: {Relation}",
-      guid, request.Channel, request.Password?.Length > 0 ? "Yes" : "No", request.Relation.Type, request.Relation.Name, request.Relation.Relation);
+    _logger.LogInformation("[{Guid} SetRelation Request] Channel: {Channel}, Password: {Password}, Type: {Type}, Name: {Name}, Relation: {Relation}, Comment: {Comment}",
+      guid, request.Channel, request.Password?.Length > 0 ? "Yes" : "No", request.Relation.Type, request.Relation.Name, request.Relation.Relation, request.Relation.Comment ?? "Empty");
     SuccessReply rtnVal = new();
 
     if (!string.IsNullOrWhiteSpace(request.Channel)) {
@@ -219,6 +222,9 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
               };
               relation.Timestamp = DateTime.UtcNow;
               relation.Value = request.Relation.Relation;
+              if (request.Relation.Comment != null) {
+                relation.Comment = request.Relation.Comment;
+              }
               _db.Update(relation);
               rtnVal.Success = _db.SaveChanges() > 0;
               if (!rtnVal.Success) {
@@ -266,7 +272,8 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
             rtnVal.Relations.Add(new RelationInfo() {
               Type = rel.Type,
               Name = rel.Name,
-              Relation = rel.Value
+              Relation = rel.Value,
+              Comment = !string.IsNullOrWhiteSpace(rel.Comment) ? rel.Comment : null
             });
           }
         }
@@ -340,7 +347,8 @@ public class SCHQ_Service(ILogger<SCHQ_Service> logger) : SCHQ_Relations.SCHQ_Re
                   Relation = new RelationInfo() {
                     Type = rel.Type,
                     Name = rel.Name,
-                    Relation = rel.Value
+                    Relation = rel.Value,
+                    Comment = rel.Comment ?? string.Empty
                   }
                 });
                 SyncTimestamp = rel.Timestamp;
