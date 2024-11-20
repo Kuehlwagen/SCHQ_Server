@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 using MySql.EntityFrameworkCore.Metadata;
 
 #nullable disable
 
 namespace SCHQ_Server.Migrations {
   /// <inheritdoc />
-  public partial class Initial : Migration {
+  public partial class InitialMySQL : Migration {
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder) {
       migrationBuilder.AlterDatabase()
