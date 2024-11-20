@@ -3,6 +3,7 @@ syntax = "proto3";
 option csharp_namespace = "SCHQ_Protos";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
 package schq;
@@ -11,12 +12,14 @@ service SCHQ_Relations {
   rpc AddChannel (ChannelRequest) returns (SuccessReply);
   rpc GetChannels (google.protobuf.Empty) returns (ChannelsReply);
   rpc GetChannel (ChannelNameRequest) returns (ChannelReply);
+  rpc UpdateChannel (UpdateChannelRequest) returns (SuccessReply);
   rpc RemoveChannel (ChannelRequest) returns (SuccessReply);
   rpc SetRelations (SetRelationsRequest) returns (SuccessReply);
   rpc SetRelation (SetRelationRequest) returns (SuccessReply);
   rpc GetRelations (ChannelRequest) returns (RelationsReply);
   rpc GetRelation (RelationRequest) returns (RelationReply);
   rpc SyncRelations (ChannelRequest) returns (stream SyncRelationsReply);
+  rpc RemoveRelations (ChannelRequest) returns (SuccessReply);
 }
 
 message SuccessReply {
@@ -36,6 +39,8 @@ message ChannelRequest {
   string channel = 1;
   string password = 2;
   ChannelPermissions permissons = 3;
+  string adminPassword = 4;
+  google.protobuf.StringValue description = 5;
 }
 
 message ChannelReply {
@@ -57,6 +62,7 @@ message SetRelationRequest {
 
 message RelationsReply {
   repeated RelationInfo relations = 1;
+  string info = 2;
 }
 
 message RelationRequest {
@@ -68,7 +74,8 @@ message RelationRequest {
 
 message RelationReply {
   bool found = 1;
-  RelationValue relation = 2; 
+  RelationValue relation = 2;
+  google.protobuf.Timestamp timestamp = 3;
 }
 
 message SyncRelationsReply {
@@ -80,6 +87,7 @@ message ChannelInfo {
   string name = 1;
   bool hasPassword = 2;
   ChannelPermissions permissions = 3;
+  google.protobuf.StringValue description = 4;
 }
 
 message RelationInfo {
@@ -87,6 +95,19 @@ message RelationInfo {
   string name = 2;
   RelationValue relation = 3;
   google.protobuf.StringValue comment = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message UpdateChannelRequest {
+  string channel = 1;
+  string newChannelName = 2;
+  string adminPassword = 3;
+  string newAdminPassword = 4;
+  string newAdminPasswordConfirm = 5;
+  string newPassword = 6;
+  string newPasswordConfirm = 7;
+  ChannelPermissions permissions = 8;
+  google.protobuf.StringValue description = 9;
 }
 
 enum ChannelPermissions {

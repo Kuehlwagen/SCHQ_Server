@@ -15,24 +15,40 @@ namespace SCHQ_Server.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.3");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("SCHQ_Server.Models.Channel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
+
+                    b.Property<string>("AdminPassword")
+                        .HasColumnType("longtext")
+                        .UseCollation("NOCASE");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .UseCollation("NOCASE");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(255)")
                         .UseCollation("NOCASE");
 
                     b.Property<string>("Password")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("longtext")
                         .UseCollation("NOCASE");
 
                     b.Property<int>("Permissions")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -46,27 +62,33 @@ namespace SCHQ_Server.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("ChannelId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("longtext")
                         .UseCollation("NOCASE");
 
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(255)")
                         .UseCollation("NOCASE");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
+
+                    b.Property<int>("UpdateCount")
+                        .HasColumnType("int");
 
                     b.Property<int>("Value")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
